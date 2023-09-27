@@ -1,3 +1,7 @@
+local popup = require "plenary.popup"
+local Job = require('plenary.job')
+
+
 ---@class Config
 ---@field opt string Your config option
 local config = {
@@ -15,35 +19,38 @@ M.setup = function(args)
   M.config = vim.tbl_deep_extend("force", M.config, args or {})
 end
 
+
+local function create_border_popup(borderchars)
+  local _, config = popup.create("popup with custom border", {
+    line = 8,
+    col = 55,
+    padding = { 0, 3, 0, 3 },
+    borderchars = borderchars,
+  })
+  local border_id = config.border.win_id
+  local border_bufnr = vim.api.nvim_win_get_buf(border_id)
+  print(border_id)
+  print(border_bufnr)
+end
+
 ---@return string
 M.pull_request = function()
-  local fn = vim.fn.expand("%")
-  print(fn)
 
-  local output = ""
-  -- TODO: Get relative path to the root, perhaps move to separate function so we can add a test for it, perhaps move to separate function so we can add a test for it.
-    local cursor_pos = vim.api.nvim_win_get_cursor(0)
-    -- url = string.format('%s/blob/%s/%s?plain=1#L%s', repo, branch, path, cursor_pos[1])
-  vim.fn.jobstart("gh pr " .. fn .. ":1", {
+-- local opts = {
+--     \ "on_stdout": function("s:RgEvent"),
+--     \ "on_stderr": function("s:RgEvent"),
+--     \ "on_exit": function("s:RgEvent"),
+--     \ "pattern": a:pattern
+--     \ }
+--     let s:rg_job = jobstart(a:cmd, opts)
+local output = ""
+  vim.fn.jobstart("gh pr create", {
     on_stdout = function(_, d, _)
-      output = output .. vim.fn.join(d)
-      print(output)
+        output = output .. vim.fn.join(d)
+        print(output)
     end,
   })
 
-  -- local job = vim.fn.jobstart('gh version', {
-  --         -- cwd = '/path/to/working/dir',
-  --         on_exit = function ()
-  --             print "on exit"
-  --         end,
-  --         on_stdout = function ()
-  --            print "on stdout"
-  --         end,
-  --         on_stderr = function ()
-  --            print "on stderr"
-  --         end
-  --     }
-  -- )
   return M.config.opt
 end
 
